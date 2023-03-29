@@ -157,7 +157,7 @@ hold off
 % Consider the rack and pinion (schematic below) where the tire force 
 % during turning is modeled as a spring (this is the force that provides 
 % what is known as the aligning moment in your car which causes the 
-% steering wheel to ìstraightenî if you remove your hand from the steering 
+% steering wheel to ‚Äústraighten‚Äù if you remove your hand from the steering 
 % wheel in a turn). Assume the DC motor from Section I of the project is 
 % attached to the steering wheel as shown in the picture. The steering 
 % wheel (not shown in the schematic) has inertia Is. Values for the 
@@ -208,7 +208,7 @@ Keff = R/k_t*k*r^2;
 % To use run_car.p clear all in command window and Run the program twice
 
 % Runcar Simulation
-steer =10; %angle desired
+steer =12; %angle desired
 i=1;
 t = 0:.01:90;
 tire_angle(i) = 0;
@@ -258,7 +258,7 @@ tf_control = tf([kd, (kp+Keff)],[Jeff, (Beff+kd), (Keff +kp)]);
 % your simulation code on the same graph.
 
 t_ = 0:.01:2;
-U = zeros(length(t_),1)+10;
+U = zeros(length(t_),1)+12;
 figure(9)
 plot(t,tire_angle(1:length(t))*180/pi,'k-')
 hold on
