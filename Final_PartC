@@ -1,0 +1,96 @@
+clear all
+%% Part A initialization
+steer =deg2rad(10); %angle desired
+a =1.72; %M
+b = 1.25;
+C_f= 143000;
+C_r= 143000;
+I =1200;
+V_car = 10;
+mass = 720; %kg
+i=1;
+t = 0:.01:2;
+
+Aeff = I*mass;
+Beff = (I*C_f+I*C_r+mass*C_f*a^2+mass*C_r*b^2)/(V_car);
+Ceff = mass*C_r*b-mass*C_f*a + (C_f*C_r*a^2+C_r*C_f*b^2+2*C_r*C_f*a*b)/(V_car^2);
+Deff = mass*C_f*a;
+Eeff = (C_f*C_r*a+C_f*C_r*b)/(V_car);
+
+parta_tf = tf([Deff, Eeff], [Aeff, Beff, Ceff,0]);
+
+
+%% Part B 
+kp = 221;
+kd = 11.5;
+jeff = .6093;
+beff = .076;
+keff = .1263;
+
+% del/del des
+
+
+%% Testing New Part C Proportional 
+    %Steer Angle Integration
+kp_c = 4;
+kd2 =3.2;
+a = 24;
+kp2 = a*kd2;
+
+Feff = kd*Deff*kp_c;
+Geff = kd*Eeff*kp_c +kp*Deff*kp_c +keff*Deff*kp_c;
+Heff = kp*Eeff*kp_c +keff*Eeff*kp_c;
+Ieff = jeff*Aeff;
+Leff = Aeff*beff+kd*Aeff+kd*Aeff*kp_c +Beff*jeff;
+Meff = keff*Aeff+ kp*Aeff+ Aeff*kp*kp_c + Aeff*keff*kp_c +beff*Beff+ kd*Beff+ kd*Beff*kp_c+ jeff *Ceff;
+Neff = keff*Beff+ kp*Beff + Beff*kp*kp_c+ Beff*keff*kp_c+ Ceff*beff + kd*Ceff + kd*Ceff*kp_c;
+Peff = keff*Ceff +kp*Ceff + Ceff*kp*kp_c +Ceff*keff*kp_c;
+
+numer = [(Feff*kd2),(Feff*kp2 + Geff*kd2), (Geff*kp2 + Heff*kd2),Heff*kp2];
+denom = [(Ieff),(Leff), (Meff +Feff*kd2),(Neff + Feff*kp2 +Geff*kd2), (Peff +Geff*kp2 +Heff*kd2),Heff*kp2];
+
+partc_tf = tf(numer,denom);
+
+ psi_des= .45;
+ psi_des_d= 0;
+ psi_des_dd = 0;
+del_des = deg2rad(0);
+psi_d(1) = 5;
+psi_dd(1) = 0;
+psi(1) = 0;
+vy(1) = 0;
+del_d(1) = 0;
+del(1) = 0;
+time = 0:.005:1;
+dt = .005;
+n=2;
+
+
+
+while n <=length(time)
+del_des =kp2*(psi_des - psi(n-1))+kd2*(psi_des_d -psi_d(n-1)); 
+del_des_d = kp2*(psi_des_d - psi_d(n-1)) +kd2*(psi_des_dd -psi_dd(n-1));
+del_d2 = (kd*kp_c*del_des_d +(kp*kp_c+keff*kp_c)*del_des - (beff+kd+kd*kp_c)*del_d(n-1) - (keff+kp+kp*kp_c+keff*kp_c)*del(n-1))/jeff;
+del_d(n) = del_d(n-1) + del_d2*dt;
+del(n) = del(n-1) +del_d(n)*dt;
+% Vy Integration
+vy_d = (C_f*del(n-1) - (mass*V_car+ (C_f*a/V_car) -(C_r*b/V_car))*psi_d(n-1) - ((C_f +C_r)/V_car)*vy(n-1))/mass;
+vy(n) = vy(n-1)+vy_d*dt;
+psi_dd(n) = ((C_f*a)*del(n-1) + (C_r*b/V_car - C_f*a/V_car)*vy(n-1) - ((C_f*a^2 +C_r*b^2)/V_car)*psi_d(n-1))/Ieff;
+psi_d(n) = psi_d(n-1) + psi_dd(n)*dt;
+psi(n) = psi(n-1) + psi_d(n)*dt;
+
+
+
+
+n = n+1;
+end
+figure(1)
+plot(time,psi)
+
+figure(2)
+pzmap(partc_tf)
+figure(3)
+bode(partc_tf)
+
+
